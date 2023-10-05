@@ -1,113 +1,307 @@
-import Image from 'next/image'
+/* eslint-disable @next/next/no-img-element */
+'use client'
+
+import TablePro from '@/components/TablePro'
+import { Box, ThemeProvider, Typography, createTheme } from '@mui/material'
+import { Ingrediente, ListasDeCompra, Menu, Receta, Raiz } from '@/models/root';
+import { useMemo, useState } from 'react';
+import { MRT_ColumnDef } from 'material-react-table';
+import CreateModal from '@/components/CreateModal';
+import { useStateGlobal } from '@/context/useStateGlobal';
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const app = useStateGlobal()
+  const [openModalIngrediente, setOpenModalIngrediente] = useState<boolean>(false)
+  const [openModalMenu, setOpenModalMenu] = useState<boolean>(false)
+  const [openModalReceta, setOpenModalReceta] = useState<boolean>(false)
+  const [openModalListasDeCompra, setOpenModalListasDeCompra] = useState<boolean>(false)
+
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#90caf9', // Color principal
+      },
+      secondary: {
+        main: '#f48fb1', // Color secundario
+      },
+      mode: 'dark', // Habilita el tema oscuro (a partir de Material-UI v5)
+    }
+  })
+
+  const columnIngrediente = useMemo<MRT_ColumnDef<Ingrediente>[]>(
+    () => [
+      // {
+      //   accessorKey: 'id',
+      //   header: 'Id',
+      // },
+      {
+        accessorKey: 'nombre', //simple recommended way to define a column
+        header: 'Nombre',
+        Cell: ({ renderedCellValue, row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+            }}
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+            <img
+              alt=" "
+              height={30}
+              src={"https://random.imagecdn.app/30/30" ?? row.original.foto}
+              loading="lazy"
+              style={{ borderRadius: '50%' }}
             />
-          </a>
-        </div>
-      </div>
+            {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
+            <span>{renderedCellValue}</span>
+          </Box>
+        ),
+      },
+      {
+        accessorKey: 'cantidad_disponible',
+        header: 'Cantidad Disponible',
+      },
+    ],
+    [],
+  );
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+  const columnMenu = useMemo<MRT_ColumnDef<Menu>[]>(
+    () => [
+      {
+        accessorKey: 'nombre', //simple recommended way to define a column
+        header: 'Nombre',
+      },
+      {
+        accessorKey: 'descripcion', //simple recommended way to define a column
+        header: 'Descripcion',
+      },
+    ],
+    [],
+  );
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+  const columnRecetas = useMemo<MRT_ColumnDef<Receta>[]>(
+    () => [
+      {
+        accessorKey: 'nombre', //simple recommended way to define a column
+        header: 'Nombre',
+      },
+    ],
+    [],
+  );
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+  const columnListasDeCompra = useMemo<MRT_ColumnDef<ListasDeCompra>[]>(
+    () => [
+      {
+        accessorKey: 'nombre', //simple recommended way to define a column
+        header: 'Nombre',
+      },
+    ],
+    [],
+  );
+  console.log(app.recetas)
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
+  return (<ThemeProvider theme={theme}>
+    <main className="p-2 bg-slate-500">
+      <TablePro<Ingrediente>
+        data={app.ingredientes}
+        columns={columnIngrediente}
+        onEditingRowSave={(e) => app.putIngrediente(e.values, e.row.original.id)}
+        onEditingRowCancel={() => console.log("cancelado")}
+        handleDelete={app.deleteIngrediente}
+        title='Ingredientes'
+        openModal={setOpenModalIngrediente}
+      />
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      <TablePro<Menu>
+        data={app.menus}
+        columns={columnMenu}
+        title='Menus'
+        openModal={setOpenModalMenu}
+        handleDelete={app.deleteMenu}
+        onEditingRowSave={(e) => app.putMenu(e.values, e.row.original.id)}
+        onEditingRowCancel={() => console.log("cancelado")}
+        renderDetailPanel={({ row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+            }}
+          >
+            {/* <img
+              alt="avatar"
+              height={200}
+              src={"https://random.imagecdn.app/200/200" ?? row.original.foto}
+              loading="lazy"
+              style={{ borderRadius: '50%' }}
+            /> */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h5">Platos:</Typography>
+              <Typography variant="body2">
+                {row.original.platos ? row.original.platos.map((item, index) => {
+                  const platos = app.getIdReceta(item.receta_id)
+                  return (
+                    <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
+                      <img
+                        alt="avatar"
+                        height={30}
+                        src={"https://random.imagecdn.app/30/30" ?? platos?.foto}
+                        loading="lazy"
+                        style={{ borderRadius: '50%', marginRight: '10px' }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{platos?.nombre}</div>
+                        <div>Porciones: {item.porciones}</div>
+                        <ul style={{ listStyle: 'none', padding: 0 }}>
+                          {platos?.ingredientes.map((ingredienteId, ingIndex) => {
+                            const ingredienteInfo = app.getIdIngrediente(ingredienteId);
+                            return (
+                              <li key={ingIndex} style={{ display: 'flex', alignItems: 'center' }}>
+                                <img
+                                  alt="avatar"
+                                  height={20}
+                                  src={"https://random.imagecdn.app/20/20" ?? ingredienteInfo?.foto}
+                                  loading="lazy"
+                                  style={{ borderRadius: '50%', marginRight: '5px' }}
+                                />
+                                {ingredienteInfo?.nombre}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </li>
+                  )
+                }) : <>No hay platos</>}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      />
+
+      <TablePro<Receta>
+        data={app.recetas}
+        columns={columnRecetas}
+        title='Recetas'
+        openModal={setOpenModalReceta}
+        handleDelete={app.deleteReceta}
+        onEditingRowSave={(e) => app.putReceta(e.values, e.row.original.id)}
+        onEditingRowCancel={() => console.log("cancelado")}
+        renderDetailPanel={({ row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+            }}
+          >
+            <img
+              alt="avatar"
+              height={200}
+              src={"https://random.imagecdn.app/200/200" ?? row.original.foto}
+              loading="lazy"
+              style={{ borderRadius: '50%' }}
+            />
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h5">Ingredientes:</Typography>
+              <Typography variant="body2">
+                {row.original.ingredientes ? row.original.ingredientes.map((item, index) => {
+                  const ingrediente = app.getIdIngrediente(item)
+                  return (
+                    <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
+                      <img
+                        alt="avatar"
+                        height={30}
+                        src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
+                        loading="lazy"
+                        style={{ borderRadius: '50%', marginRight: '10px' }}
+                      />
+                      <span>
+                        {ingrediente?.nombre}
+                      </span>
+                      <span>
+                        {ingrediente?.cantidad_disponible}
+                      </span>
+                    </li>
+                  )
+                }) : <>No hay Ingredientes</>}
+              </Typography>
+              <Typography variant="h5">Intrucciones:</Typography>
+              <Typography variant="body2">
+                &quot;{row.original.instrucciones}&quot;
+              </Typography>
+            </Box>
+          </Box>
+        )} />
+
+
+      <TablePro<ListasDeCompra>
+        data={app.listas_de_compra}
+        columns={columnListasDeCompra}
+        title='Lista de Compra'
+        openModal={setOpenModalListasDeCompra}
+        handleDelete={app.deleteListasDeCompra}
+        onEditingRowSave={(e) => app.putListasDeCompra(e.values, e.row.original.id)}
+        onEditingRowCancel={() => console.log("cancelado")}
+        renderDetailPanel={({ row }) => (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+            }}
+          >
+
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h5">Items:</Typography>
+              <Typography variant="body2">
+                {row.original.items ? row.original.items.map((item, index) => {
+                  const ingrediente = app.getIdIngrediente(item.ingrediente_id)
+                  return (
+                    <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
+                      <img
+                        alt="avatar"
+                        height={30}
+                        src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
+                        loading="lazy"
+                        style={{ borderRadius: '50%', marginRight: '10px' }}
+                      />
+                      <span>
+                        {ingrediente?.nombre}, Cantidad: {item.cantidad}
+                      </span>
+                    </li>
+                  )
+                }) : <>No hay Items</>}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      />
+
+      <CreateModal<Ingrediente>
+        columns={columnIngrediente}
+        open={openModalIngrediente}
+        onClose={() => setOpenModalIngrediente(false)}
+        onSubmit={(e) => app.postIngrediente(e)}
+      />
+      <CreateModal<Menu>
+        columns={columnMenu}
+        open={openModalMenu}
+        onClose={() => setOpenModalMenu(false)}
+        onSubmit={(e) => app.postMenu(e)}
+      />
+      <CreateModal<Receta>
+        columns={columnRecetas}
+        open={openModalReceta}
+        onClose={() => setOpenModalReceta(false)}
+        onSubmit={(e) => app.postReceta(e)}
+      />
+      <CreateModal<ListasDeCompra>
+        columns={columnListasDeCompra}
+        open={openModalListasDeCompra}
+        onClose={() => setOpenModalListasDeCompra(false)}
+        onSubmit={(e) => app.postListasDeCompra(e)}
+      />
     </main>
-  )
+  </ThemeProvider>)
 }
