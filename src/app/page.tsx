@@ -2,12 +2,16 @@
 'use client'
 
 import TablePro from '@/components/TablePro'
-import { Box, ThemeProvider, Typography, createTheme } from '@mui/material'
-import { Ingrediente, ListasDeCompra, Menu, Receta, Raiz } from '@/models/root';
+import { Box, ThemeProvider, Typography, createTheme, BottomNavigation, BottomNavigationAction } from '@mui/material'
+import { Ingrediente, ListasDeCompra, Menu, Receta } from '@/models/root';
 import { useMemo, useState } from 'react';
 import { MRT_ColumnDef } from 'material-react-table';
 import CreateModal from '@/components/CreateModal';
 import { useStateGlobal } from '@/context/useStateGlobal';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FastfoodIcon from '@mui/icons-material/Fastfood';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 
 export default function Home() {
   const app = useStateGlobal()
@@ -15,6 +19,8 @@ export default function Home() {
   const [openModalMenu, setOpenModalMenu] = useState<boolean>(false)
   const [openModalReceta, setOpenModalReceta] = useState<boolean>(false)
   const [openModalListasDeCompra, setOpenModalListasDeCompra] = useState<boolean>(false)
+  const [section, setSection] = useState(0);
+
 
   const theme = createTheme({
     palette: {
@@ -101,8 +107,21 @@ export default function Home() {
   console.log(app.recetas)
 
   return (<ThemeProvider theme={theme}>
-    <main className="p-2 bg-slate-500">
-      <TablePro<Ingrediente>
+    <BottomNavigation
+      sx={{ position: "fixed", width: "100vw", zIndex: 9999 }}
+      showLabels
+      value={section}
+      onChange={(_, newValue) => {
+        setSection(newValue);
+      }}
+    >
+      <BottomNavigationAction label="Ingredientes" icon={<FastfoodIcon />} />
+      <BottomNavigationAction label="Receta" icon={<MenuBookIcon />} />
+      <BottomNavigationAction label="Menu" icon={<RestaurantIcon />} />
+      <BottomNavigationAction label="Lista de Compra" icon={<ChecklistIcon />} />
+    </BottomNavigation>
+    <main className="p-2 pt-16 min-h-screen bg-slate-500">
+      {section === 0 && <TablePro<Ingrediente>
         data={app.ingredientes}
         columns={columnIngrediente}
         onEditingRowSave={(e) => app.putIngrediente(e.values, e.row.original.id)}
@@ -110,173 +129,175 @@ export default function Home() {
         handleDelete={app.deleteIngrediente}
         title='Ingredientes'
         openModal={setOpenModalIngrediente}
-      />
+      />}
+      {section === 1 &&
+        <TablePro<Receta>
+          data={app.recetas}
+          columns={columnRecetas}
+          title='Recetas'
+          openModal={setOpenModalReceta}
+          handleDelete={app.deleteReceta}
+          onEditingRowSave={(e) => app.putReceta(e.values, e.row.original.id)}
+          onEditingRowCancel={() => console.log("cancelado")}
+          renderDetailPanel={({ row }) => (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+              }}
+            >
+              <img
+                alt="avatar"
+                height={200}
+                src={"https://random.imagecdn.app/200/200" ?? row.original.foto}
+                loading="lazy"
+                style={{ borderRadius: '50%' }}
+              />
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5">Ingredientes:</Typography>
+                <Typography variant="body2">
+                  {row.original.ingredientes ? row.original.ingredientes.map((item, index) => {
+                    const ingrediente = app.getIdIngrediente(item)
+                    return (
+                      <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
+                        <img
+                          alt="avatar"
+                          height={30}
+                          src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
+                          loading="lazy"
+                          style={{ borderRadius: '50%', marginRight: '10px' }}
+                        />
+                        <span>
+                          {ingrediente?.nombre}
+                        </span>
+                        <span>
+                          {ingrediente?.cantidad_disponible}
+                        </span>
+                      </li>
+                    )
+                  }) : <>No hay Ingredientes</>}
+                </Typography>
+                <Typography variant="h5">Intrucciones:</Typography>
+                <Typography variant="body2">
+                  &quot;{row.original.instrucciones}&quot;
+                </Typography>
+              </Box>
+            </Box>
+          )} />}
 
-      <TablePro<Menu>
-        data={app.menus}
-        columns={columnMenu}
-        title='Menus'
-        openModal={setOpenModalMenu}
-        handleDelete={app.deleteMenu}
-        onEditingRowSave={(e) => app.putMenu(e.values, e.row.original.id)}
-        onEditingRowCancel={() => console.log("cancelado")}
-        renderDetailPanel={({ row }) => (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-            }}
-          >
-            {/* <img
+      {section === 2 &&
+        <TablePro<Menu>
+          data={app.menus}
+          columns={columnMenu}
+          title='Menus'
+          openModal={setOpenModalMenu}
+          handleDelete={app.deleteMenu}
+          onEditingRowSave={(e) => app.putMenu(e.values, e.row.original.id)}
+          onEditingRowCancel={() => console.log("cancelado")}
+          renderDetailPanel={({ row }) => (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+              }}
+            >
+              {/* <img
               alt="avatar"
               height={200}
               src={"https://random.imagecdn.app/200/200" ?? row.original.foto}
               loading="lazy"
               style={{ borderRadius: '50%' }}
             /> */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h5">Platos:</Typography>
-              <Typography variant="body2">
-                {row.original.platos ? row.original.platos.map((item, index) => {
-                  const platos = app.getIdReceta(item.receta_id)
-                  return (
-                    <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
-                      <img
-                        alt="avatar"
-                        height={30}
-                        src={"https://random.imagecdn.app/30/30" ?? platos?.foto}
-                        loading="lazy"
-                        style={{ borderRadius: '50%', marginRight: '10px' }}
-                      />
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{platos?.nombre}</div>
-                        <div>Porciones: {item.porciones}</div>
-                        <ul style={{ listStyle: 'none', padding: 0 }}>
-                          {platos?.ingredientes.map((ingredienteId, ingIndex) => {
-                            const ingredienteInfo = app.getIdIngrediente(ingredienteId);
-                            return (
-                              <li key={ingIndex} style={{ display: 'flex', alignItems: 'center' }}>
-                                <img
-                                  alt="avatar"
-                                  height={20}
-                                  src={"https://random.imagecdn.app/20/20" ?? ingredienteInfo?.foto}
-                                  loading="lazy"
-                                  style={{ borderRadius: '50%', marginRight: '5px' }}
-                                />
-                                {ingredienteInfo?.nombre}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    </li>
-                  )
-                }) : <>No hay platos</>}
-              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5">Platos:</Typography>
+                <Typography variant="body2">
+                  {row.original.platos ? row.original.platos.map((item, index) => {
+                    const platos = app.getIdReceta(item.receta_id)
+                    return (
+                      <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
+                        <img
+                          alt="avatar"
+                          height={30}
+                          src={"https://random.imagecdn.app/30/30" ?? platos?.foto}
+                          loading="lazy"
+                          style={{ borderRadius: '50%', marginRight: '10px' }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{platos?.nombre}</div>
+                          <div>Porciones: {item.porciones}</div>
+                          <ul style={{ listStyle: 'none', padding: 0 }}>
+                            {platos?.ingredientes.map((ingredienteId, ingIndex) => {
+                              const ingredienteInfo = app.getIdIngrediente(ingredienteId);
+                              return (
+                                <li key={ingIndex} style={{ display: 'flex', alignItems: 'center' }}>
+                                  <img
+                                    alt="avatar"
+                                    height={20}
+                                    src={"https://random.imagecdn.app/20/20" ?? ingredienteInfo?.foto}
+                                    loading="lazy"
+                                    style={{ borderRadius: '50%', marginRight: '5px' }}
+                                  />
+                                  {ingredienteInfo?.nombre}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </li>
+                    )
+                  }) : <>No hay platos</>}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        )}
-      />
+          )}
+        />}
 
-      <TablePro<Receta>
-        data={app.recetas}
-        columns={columnRecetas}
-        title='Recetas'
-        openModal={setOpenModalReceta}
-        handleDelete={app.deleteReceta}
-        onEditingRowSave={(e) => app.putReceta(e.values, e.row.original.id)}
-        onEditingRowCancel={() => console.log("cancelado")}
-        renderDetailPanel={({ row }) => (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-            }}
-          >
-            <img
-              alt="avatar"
-              height={200}
-              src={"https://random.imagecdn.app/200/200" ?? row.original.foto}
-              loading="lazy"
-              style={{ borderRadius: '50%' }}
-            />
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h5">Ingredientes:</Typography>
-              <Typography variant="body2">
-                {row.original.ingredientes ? row.original.ingredientes.map((item, index) => {
-                  const ingrediente = app.getIdIngrediente(item)
-                  return (
-                    <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
-                      <img
-                        alt="avatar"
-                        height={30}
-                        src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
-                        loading="lazy"
-                        style={{ borderRadius: '50%', marginRight: '10px' }}
-                      />
-                      <span>
-                        {ingrediente?.nombre}
-                      </span>
-                      <span>
-                        {ingrediente?.cantidad_disponible}
-                      </span>
-                    </li>
-                  )
-                }) : <>No hay Ingredientes</>}
-              </Typography>
-              <Typography variant="h5">Intrucciones:</Typography>
-              <Typography variant="body2">
-                &quot;{row.original.instrucciones}&quot;
-              </Typography>
+
+      {section === 3 &&
+        <TablePro<ListasDeCompra>
+          data={app.listas_de_compra}
+          columns={columnListasDeCompra}
+          title='Lista de Compra'
+          openModal={setOpenModalListasDeCompra}
+          handleDelete={app.deleteListasDeCompra}
+          onEditingRowSave={(e) => app.putListasDeCompra(e.values, e.row.original.id)}
+          onEditingRowCancel={() => console.log("cancelado")}
+          renderDetailPanel={({ row }) => (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+              }}
+            >
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5">Items:</Typography>
+                <Typography variant="body2">
+                  {row.original.items ? row.original.items.map((item, index) => {
+                    const ingrediente = app.getIdIngrediente(item.ingrediente_id)
+                    return (
+                      <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
+                        <img
+                          alt="avatar"
+                          height={30}
+                          src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
+                          loading="lazy"
+                          style={{ borderRadius: '50%', marginRight: '10px' }}
+                        />
+                        <span>
+                          {ingrediente?.nombre}, Cantidad: {item.cantidad}
+                        </span>
+                      </li>
+                    )
+                  }) : <>No hay Items</>}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        )} />
-
-
-      <TablePro<ListasDeCompra>
-        data={app.listas_de_compra}
-        columns={columnListasDeCompra}
-        title='Lista de Compra'
-        openModal={setOpenModalListasDeCompra}
-        handleDelete={app.deleteListasDeCompra}
-        onEditingRowSave={(e) => app.putListasDeCompra(e.values, e.row.original.id)}
-        onEditingRowCancel={() => console.log("cancelado")}
-        renderDetailPanel={({ row }) => (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-            }}
-          >
-
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h5">Items:</Typography>
-              <Typography variant="body2">
-                {row.original.items ? row.original.items.map((item, index) => {
-                  const ingrediente = app.getIdIngrediente(item.ingrediente_id)
-                  return (
-                    <li key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: 3 }}>
-                      <img
-                        alt="avatar"
-                        height={30}
-                        src={"https://random.imagecdn.app/30/30" ?? ingrediente?.foto}
-                        loading="lazy"
-                        style={{ borderRadius: '50%', marginRight: '10px' }}
-                      />
-                      <span>
-                        {ingrediente?.nombre}, Cantidad: {item.cantidad}
-                      </span>
-                    </li>
-                  )
-                }) : <>No hay Items</>}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-      />
+          )}
+        />}
 
       <CreateModal<Ingrediente>
         columns={columnIngrediente}
@@ -302,6 +323,9 @@ export default function Home() {
         onClose={() => setOpenModalListasDeCompra(false)}
         onSubmit={(e) => app.postListasDeCompra(e)}
       />
+
+
+
     </main>
   </ThemeProvider>)
 }
